@@ -26,11 +26,6 @@
 
 import os
 import sys
-
-#TODO: Where do we get the client from?
-sys.path.insert(0, '/home/ryan/gfs/sixty/amps/wip/tests/fit/amps-python-client-develop/build/lib.linux-x86_64-2.7')
-#sys.path.insert(0, '/home/ryan/gfs/sixty/amps/wip/tests/fit/amps-python-client-develop/build/lib.linux-x86_64-3.6')
-
 import platform
 import AMPS
 import amps_kerberos_authenticator
