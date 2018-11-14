@@ -36,7 +36,6 @@ else:
   raise RuntimeError('%s is not a supported platform' % OS)
 
 def validate_spn(spn):
-  #TODO: Confirm that @REALM can be specified when using winkerberos. It seems like it can't given testing with replace('/', '@') worked (I think).
   hostPattern = '(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])'
   spnPattern = '^(\\w+/)(%s)(:\\d+)?' % hostPattern
 
@@ -57,7 +56,9 @@ class AMPSKerberosAuthenticator(object):
     validate_spn(spn)
     self.spn = spn.replace('/', '@')
     self.authenticated = False
-    result, self.ctx = kerberos.authGSSClientInit(self.spn) #TODO: Error check
+    (result, self.ctx) = kerberos.authGSSClientInit(self.spn)
+    if result != 1:
+        raise AMPS.AuthenticationException('Failed to initialize the security context')
 
   def authenticate(self, username, token):
     token = token or ''
