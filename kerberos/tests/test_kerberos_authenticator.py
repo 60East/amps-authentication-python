@@ -70,9 +70,9 @@ def test_obtain_token():
 def test_publish():
     authenticator = amps_kerberos_authenticator.create(SPN)
     client = AMPS.Client('KerberosTestPublisher')
-    client.connect(URI);
-    client.logon(10000, authenticator);
-    client.publish('/topic', "{'foo': 'bar'}");
+    client.connect(URI)
+    client.logon(10000, authenticator)
+    client.publish('/topic', "{'foo': 'bar'}")
 
 def test_undefined_spn():
     error_thrown = False
