@@ -29,6 +29,7 @@ import sys
 import platform
 import AMPS
 import amps_kerberos_authenticator
+from nose import SkipTest
 from nose.tools import *
 
 OS = platform.system()
@@ -39,8 +40,12 @@ required_env_vars = {
 }
 
 if 'Linux' in OS:
-    required_env_vars['KRB5_CLIENT_KTNAME'] = '/home/ubuntu/.krb/60east-linux.keytab'
+    required_env_vars['KRB5_CLIENT_KTNAME'] = None
     required_env_vars['KRB5_CONFIG'] = None
+
+HOST = os.environ.get('AMPS_HOST')
+if not HOST:
+    raise SkipTest('AMPS_HOST env var must be set')
 
 for env_var, default_value in required_env_vars.items():
     if env_var not in os.environ:
@@ -50,14 +55,7 @@ for env_var, default_value in required_env_vars.items():
         else:
             raise RuntimeError('The %s env var must be set' % env_var)
 
-HOST = os.environ.get('AMPS_HOST')
-if not HOST:
-    raise RuntimeError('AMPS_HOST env var must be set')
-
 PORT = os.environ.get('AMPS_PORT')
-if not PORT:
-    raise RuntimeError('AMPS_PORT env var must be set')
-
 URI = 'tcp://60east@%s:%s/amps/json' % (HOST, PORT)
 SPN = 'AMPS/%s' % HOST
 
