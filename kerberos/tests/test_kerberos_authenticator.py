@@ -45,7 +45,7 @@ if 'Linux' in OS:
 
 HOST = os.environ.get('AMPS_HOST')
 if not HOST:
-    raise SkipTest('AMPS_HOST env var must be set')
+    raise SkipTest('Kerberos tests are being skipped. Set the AMPS_HOST environment variable to enable them.')
 
 for env_var, default_value in required_env_vars.items():
     if env_var not in os.environ:
