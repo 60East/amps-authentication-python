@@ -29,52 +29,66 @@ import AMPS
 OS = platform.system()
 
 if 'Linux' in OS:
-  import kerberos
+    import kerberos
 elif 'Windows' in OS:
-  import winkerberos as kerberos
+    import winkerberos as kerberos
 else:
-  raise RuntimeError('%s is not a supported platform' % OS)
+    raise RuntimeError('%s is not a supported platform' % OS)
 
 def validate_spn(spn):
-  hostPattern = '(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])'
-  spnPattern = '^(\\w+/)(%s)(:\\d+)?' % hostPattern
+    hostPattern = '(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])'
+    spnPattern = '^(\\w+/)(%s)(:\\d+)?' % hostPattern
 
-  if 'Linux' in OS:
-    spnFormat = '<service>/<host>[:<port>]'
-    spnPattern = '%s$' % spnPattern
-  elif 'Windows' in OS:
-    realmPattern = "@[\\w\\d]+([\\.\\w\\d]*)?";
-    spnPattern = '%s(%s)?$' % (spnPattern, realmPattern)
-    spnFormat = '<service>/<host>[:<port>][@REALM]'
+    if 'Linux' in OS:
+        spnFormat = '<service>/<host>[:<port>]'
+        spnPattern = '%s$' % spnPattern
+    elif 'Windows' in OS:
+        realmPattern = "@[\\w\\d]+([\\.\\w\\d]*)?";
+        spnPattern = '%s(%s)?$' % (spnPattern, realmPattern)
+        spnFormat = '<service>/<host>[:<port>][@REALM]'
 
-  spnRE = re.compile(spnPattern)
-  if not spnRE.match(spn):
-    raise AMPS.AuthenticationException('The specified SPN %s does not match the format %s' % (spn, spnFormat))
+    spnRE = re.compile(spnPattern)
+    if not spnRE.match(spn):
+        raise AMPS.AuthenticationException('The specified SPN %s does not match the format %s' % (spn, spnFormat))
 
 class AMPSKerberosAuthenticator(object):
-  def __init__(self, spn):
-    validate_spn(spn)
-    self.spn = spn.replace('/', '@')
-    self.authenticated = False
-    (result, self.ctx) = kerberos.authGSSClientInit(self.spn)
-    if result != 1:
-        raise AMPS.AuthenticationException('Failed to initialize the security context')
+    def __init__(self, spn):
+        validate_spn(spn)
+        self.spn = spn.replace('/', '@')
+        self.ctx = None
+        self.init()
 
-  def authenticate(self, username, token):
-    token = token or ''
-    result = kerberos.authGSSClientStep(self.ctx, token)
-    if result == 1:
-      self.authenticated = True
-    return kerberos.authGSSClientResponse(self.ctx) if result >= 0 else None
+    def init(self):
+        print('init')
+        (result, self.ctx) = kerberos.authGSSClientInit(self.spn)
+        if result != 1:
+            raise AMPS.AuthenticationException('Failed to initialize the security context')
 
-  def completed(self, username, token, reason):
-    if reason == AMPS.Reason.AuthDisabled:
-      return
-    self.authenticate(username, token)
+    def authenticate(self, username, token):
+        print('authenticate')
+        if not self.ctx:
+            self.init()
+        token = token or ''
+        result = kerberos.authGSSClientStep(self.ctx, token)
+        response = kerberos.authGSSClientResponse(self.ctx)
+        if result == 1:
+            self.dispose()
+        return response if result >= 0 else None
 
-  def retry(self, username, token):
-    self.authenticate(username, None)
+    def completed(self, username, token, reason):
+        print('completed')
+        if reason == AMPS.Reason.AuthDisabled:
+            self.dispose()
+            return
+        self.authenticate(username, token)
+
+    def retry(self, username, token):
+        self.authenticate(username, None)
+
+    def dispose(self):
+        print('dispose')
+        self.ctx = None
 
 def create(spn):
-  return AMPSKerberosAuthenticator(spn)
+    return AMPSKerberosAuthenticator(spn)
 
