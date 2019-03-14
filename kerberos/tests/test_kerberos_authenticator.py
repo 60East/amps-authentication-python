@@ -72,6 +72,16 @@ def test_publish():
     client.logon(10000, authenticator)
     client.publish('/topic', "{'foo': 'bar'}")
 
+def test_auth_twice():
+    authenticator = amps_kerberos_authenticator.create(SPN)
+    client = AMPS.Client('KerberosTestPublisher')
+    client.connect(URI)
+    client.logon(10000, authenticator)
+    client.close()
+    client.connect(URI)
+    client.logon(10000, authenticator)
+    client.publish('/topic', "{'foo': 'bar'}")
+
 def test_undefined_spn():
     error_thrown = False
     authenticator = amps_kerberos_authenticator.create('AMPS/foo.com')

@@ -59,13 +59,11 @@ class AMPSKerberosAuthenticator(object):
         self.init()
 
     def init(self):
-        print('init')
         (result, self.ctx) = kerberos.authGSSClientInit(self.spn)
         if result != 1:
             raise AMPS.AuthenticationException('Failed to initialize the security context')
 
     def authenticate(self, username, token):
-        print('authenticate')
         if not self.ctx:
             self.init()
         token = token or ''
@@ -76,7 +74,6 @@ class AMPSKerberosAuthenticator(object):
         return response if result >= 0 else None
 
     def completed(self, username, token, reason):
-        print('completed')
         if reason == AMPS.Reason.AuthDisabled:
             self.dispose()
             return
@@ -86,7 +83,6 @@ class AMPSKerberosAuthenticator(object):
         self.authenticate(username, None)
 
     def dispose(self):
-        print('dispose')
         self.ctx = None
 
 def create(spn):
