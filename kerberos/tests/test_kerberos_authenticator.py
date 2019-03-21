@@ -72,15 +72,29 @@ def test_publish():
     client.logon(10000, authenticator)
     client.publish('/topic', "{'foo': 'bar'}")
 
-def test_auth_twice():
+def test_multiple_auth():
     authenticator = amps_kerberos_authenticator.create(SPN)
     client = AMPS.Client('KerberosTestPublisher')
-    client.connect(URI)
-    client.logon(10000, authenticator)
-    client.close()
-    client.connect(URI)
-    client.logon(10000, authenticator)
-    client.publish('/topic', "{'foo': 'bar'}")
+    for _ in range(10):
+        client.connect(URI)
+        client.logon(10000, authenticator)
+        client.close()
+
+def test_multiple_auth_with_failure():
+    authenticator = amps_kerberos_authenticator.create(SPN)
+    client = AMPS.Client('KerberosTestPublisher')
+    for i in range(10):
+        client.connect(URI)
+        if i % 2 == 0:
+            client.logon(10000, authenticator)
+            client.close()
+        else:
+            try:
+                client.logon()
+            except AMPS.AuthenticationException:
+                pass
+            finally:
+                client.close()
 
 def test_undefined_spn():
     error_thrown = False
