@@ -56,7 +56,8 @@ for env_var, default_value in required_env_vars.items():
             raise RuntimeError('The %s env var must be set' % env_var)
 
 PORT = os.environ.get('AMPS_PORT')
-URI = 'tcp://60east@%s:%s/amps/json' % (HOST, PORT)
+USER = os.environ.get('AMPS_USER', '60east')
+URI = 'tcp://%s@%s:%s/amps/json' % (USER, HOST, PORT)
 SPN = 'AMPS/%s' % HOST
 
 def test_obtain_token():
